@@ -1,0 +1,1 @@
+This project is to make my own rhythm game. It's created around 'VOCALOID' music and is played by manipulating the 4 keys.
