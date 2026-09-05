@@ -23,6 +23,7 @@ export const StartPage: React.FC<StartPageProps> = ({
       background: 'radial-gradient(circle at 50% 40%, #1e1b4b 0%, #090d16 85%)',
       overflow: 'hidden'
     }}>
+      {/* 우측 상단 유틸리티 버튼들 */}
       <div style={{ position: 'absolute', top: '24px', right: '32px', display: 'flex', gap: '16px', zIndex: 10 }}>
         <button
           onClick={onOpenEditor}
@@ -68,6 +69,7 @@ export const StartPage: React.FC<StartPageProps> = ({
         </button>
       </div>
 
+      {/* 게임 타이틀 로고 */}
       <div style={{ textAlign: 'center', marginBottom: '60px' }}>
         <h1 className="font-chakra" style={{
           fontSize: '76px',
@@ -91,7 +93,7 @@ export const StartPage: React.FC<StartPageProps> = ({
         </p>
       </div>
 
-      {/* 16. 중앙 초록색 ENTER 버튼 */}
+      {/* 중앙 초록색 ENTER 버튼 (핵심 요구사항) */}
       <button
         onClick={onEnter}
         className="btn-enter font-chakra"
@@ -112,6 +114,7 @@ export const StartPage: React.FC<StartPageProps> = ({
         ENTER
       </button>
 
+      {/* 하단 키 안내 문구 */}
       <div style={{
         position: 'absolute',
         bottom: '30px',

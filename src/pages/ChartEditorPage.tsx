@@ -27,7 +27,9 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
     const manager = new YouTubeTimingManager();
     timingRef.current = manager;
 
-    manager.initPlayer('editor-youtube-container', selectedSong.youtubeVideoId, () => {});
+    manager.initPlayer('editor-youtube-container', selectedSong.youtubeVideoId, () => {
+      // Ready
+    });
 
     const updateLoop = () => {
       if (timingRef.current) {
@@ -43,6 +45,7 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
     };
   }, [selectedSong]);
 
+  // 키보드 D, F, J, K로 노트 실시간 배치
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['input', 'textarea'].includes((e.target as HTMLElement)?.tagName?.toLowerCase())) return;
@@ -108,6 +111,7 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
     setNotes((prev) => prev.filter((n) => n.id !== id));
   };
 
+  // JSON 저장 (다운로드)
   const handleExportJson = () => {
     const chart: ChartData = {
       songId: selectedSong.id,
@@ -126,6 +130,7 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
     URL.revokeObjectURL(url);
   };
 
+  // JSON 불러오기
   const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -158,6 +163,7 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
       padding: '16px 24px',
       overflow: 'hidden'
     }}>
+      {/* 에디터 상단 툴바 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button onClick={onBack} style={{ background: '#1e293b', border: '1px solid #334155', color: '#fff', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer' }}>
@@ -177,7 +183,9 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
         </div>
       </div>
 
+      {/* 에디터 본문 */}
       <div style={{ flex: 1, display: 'flex', gap: '20px', overflow: 'hidden' }}>
+        {/* 좌측: 컨트롤 패널 및 YouTube 플레이어 */}
         <div style={{ width: '420px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ width: '100%', aspectRatio: '16/9', backgroundColor: '#000', borderRadius: '8px', overflow: 'hidden' }}>
             <div id="editor-youtube-container" style={{ width: '100%', height: '100%' }} />
@@ -261,6 +269,7 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
           </div>
         </div>
 
+        {/* 우측: 배치된 노트 목록 및 타임라인 뷰 */}
         <div className="glass-panel" style={{ flex: 1, padding: '16px', borderRadius: '10px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
             <h3 style={{ fontSize: '16px', color: '#cbd5e1' }}>노트 목록 (총 {notes.length}개)</h3>

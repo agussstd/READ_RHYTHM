@@ -1,3 +1,4 @@
+// 기본 곡 메타데이터 목록 및 기본 채보 데이터
 import { Song, ChartData } from '../types/game';
 
 export const DEFAULT_SONGS: Song[] = [
@@ -6,7 +7,7 @@ export const DEFAULT_SONGS: Song[] = [
     title: 'World is Mine',
     artist: 'ryo (supercell) feat. 初音ミク',
     category: 'VOCALOID',
-    youtubeVideoId: 'DTxlh8_5J7g',
+    youtubeVideoId: 'DTxlh8_5J7g', // World is Mine 공식/유명 MV
     previewStartTime: 15,
     charts: {
       easy: '/charts/song-01/easy.json',
@@ -20,7 +21,7 @@ export const DEFAULT_SONGS: Song[] = [
     title: 'Melt (メルト)',
     artist: 'ryo (supercell) feat. 初音ミク',
     category: 'VOCALOID',
-    youtubeVideoId: 'o1jAMSQQ4-M',
+    youtubeVideoId: 'o1jAMSQQ4-M', // Melt
     previewStartTime: 20,
     charts: {
       easy: '/charts/song-02/easy.json',
@@ -34,7 +35,7 @@ export const DEFAULT_SONGS: Song[] = [
     title: 'アイドル (Idol)',
     artist: 'YOASOBI',
     category: 'J-POP',
-    youtubeVideoId: 'ZRtdQ81jPUQ',
+    youtubeVideoId: 'ZRtdQ81jPUQ', // YOASOBI Idol Official MV
     previewStartTime: 10,
     charts: {
       easy: '/charts/song-03/easy.json',
@@ -59,23 +60,25 @@ export const DEFAULT_SONGS: Song[] = [
   }
 ];
 
+// 오프라인 혹은 정적 파일 로딩 실패 대비 기본 내장 채보 생성 헬퍼
 export function generateSampleChart(songId: string, difficulty: 'easy' | 'normal' | 'hard' | 'master', bpm: number = 130): ChartData {
   const notes = [];
   const beatDuration = 60 / bpm;
-  const startSec = 2.0;
-  const durationSec = 60;
+  const startSec = 2.0; // 2초부터 시작
+  const durationSec = 60; // 1분 분량의 알찬 채보
 
   let noteId = 1;
   const densityMap = {
-    easy: 1.0,
-    normal: 0.5,
-    hard: 0.25,
-    master: 0.25
+    easy: 1.0,    // 1박자마다
+    normal: 0.5,  // 1/2박자마다
+    hard: 0.25,   // 1/4박자마다
+    master: 0.25  // 복합 리듬
   };
 
   const step = beatDuration * (densityMap[difficulty] || 0.5);
 
   for (let t = startSec; t < durationSec; t += step) {
+    // 난이도에 따른 노트 분배
     const lane = Math.floor((Math.sin(t * 1.5) + 1) * 2) % 4 as 0 | 1 | 2 | 3;
     const isSpecial = noteId % 8 === 0;
     const isHold = noteId % 11 === 0;
@@ -88,7 +91,7 @@ export function generateSampleChart(songId: string, difficulty: 'easy' | 'normal
         type: 'hold' as const,
         holdDuration: parseFloat((beatDuration * 1.5).toFixed(3))
       });
-      t += beatDuration * 1.0;
+      t += beatDuration * 1.0; // 홀드 동안 잠깐 쉬기
     } else {
       notes.push({
         id: `note-${songId}-${difficulty}-${noteId++}`,
@@ -98,6 +101,7 @@ export function generateSampleChart(songId: string, difficulty: 'easy' | 'normal
       });
     }
 
+    // 마스터 난이도는 가끔 동시치기 생성
     if (difficulty === 'master' && noteId % 5 === 0) {
       const secondLane = (lane + 2) % 4 as 0 | 1 | 2 | 3;
       notes.push({

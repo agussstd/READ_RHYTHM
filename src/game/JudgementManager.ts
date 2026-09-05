@@ -9,10 +9,10 @@ export const JUDGEMENT_RATES: Record<JudgementType, number> = {
 };
 
 export const JUDGEMENT_COLORS: Record<JudgementType, string> = {
-  PERFECT: '#facc15',
-  GOOD: '#38bdf8',
-  FAST: '#a855f7',
-  FAIL: '#ef4444'
+  PERFECT: '#facc15', // 눈에 띄는 골드/옐로우
+  GOOD: '#38bdf8',    // 청량한 블루
+  FAST: '#a855f7',    // 퍼플
+  FAIL: '#ef4444'     // 레드
 };
 
 export interface JudgementResult {
@@ -22,11 +22,16 @@ export interface JudgementResult {
 }
 
 export class JudgementManager {
+  // 판정 윈도우 상수 (ms)
   public static readonly WINDOW_PERFECT = 50; // ±50ms
   public static readonly WINDOW_GOOD = 100;    // ±100ms
-  public static readonly WINDOW_FAST = 150;    // ±150ms
+  public static readonly WINDOW_FAST = 150;    // ±150ms (또는 빠른 입력)
   public static readonly WINDOW_FAIL = 200;    // ±200ms 초과 시 FAIL
 
+  /**
+   * timeDiffMs = (inputTime - noteTargetTime) * 1000
+   * 음수면 빠른 입력(FAST 가능), 양수면 늦은 입력
+   */
   public static judge(timeDiffMs: number): JudgementResult | null {
     const absDiff = Math.abs(timeDiffMs);
 
@@ -62,6 +67,7 @@ export class JudgementManager {
       };
     }
 
+    // 너무 일찍 눌렀거나 너무 늦은 경우 (판정 범위 밖)
     return null;
   }
 }

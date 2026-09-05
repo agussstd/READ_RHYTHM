@@ -7,11 +7,11 @@ interface ResultPageProps {
 }
 
 const RANK_COLORS: Record<string, string> = {
-  S: '#facc15',
-  A: '#22c55e',
-  B: '#38bdf8',
-  C: '#f97316',
-  F: '#ef4444'
+  S: '#facc15', // 골드
+  A: '#22c55e', // 그린
+  B: '#38bdf8', // 스카이블루
+  C: '#f97316', // 오렌지
+  F: '#ef4444'  // 레드
 };
 
 export const ResultPage: React.FC<ResultPageProps> = ({
@@ -44,6 +44,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
         boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
         border: '1px solid rgba(255, 255, 255, 0.15)'
       }}>
+        {/* 곡 타이틀 및 아티스트 */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <span className="font-chakra" style={{
             color: '#38bdf8',
@@ -62,7 +63,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
           </p>
         </div>
 
-        {/* 최종 랭크 & 달성률 */}
+        {/* 상단 랭크 & 달성률 하이라이트 */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -74,6 +75,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           marginBottom: '28px'
         }}>
+          {/* 최종 랭크 */}
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '4px' }}>RANK</div>
             <div className="font-chakra" style={{
@@ -89,7 +91,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
 
           <div style={{ width: '1px', height: '90px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
 
-          {/* 13. 최종 달성률 (100.00% 만점) */}
+          {/* 최종 달성률 (100.00% 만점) */}
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '4px' }}>ACCURACY</div>
             <div className="font-chakra" style={{
@@ -104,7 +106,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
           </div>
         </div>
 
-        {/* 20. 결과 세부 내역 */}
+        {/* 20. 결과 표시 세부 항목 그리드 */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
@@ -112,6 +114,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
           width: '100%',
           marginBottom: '32px'
         }}>
+          {/* MAXIMUM COMBO */}
           <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '14px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: '#cbd5e1', fontSize: '14px', fontWeight: '600' }}>MAXIMUM COMBO</span>
             <span className="font-chakra" style={{ fontSize: '20px', fontWeight: 'bold', color: '#facc15' }}>
@@ -119,6 +122,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
             </span>
           </div>
 
+          {/* 처리한 총 노트 개수 */}
           <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '14px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: '#cbd5e1', fontSize: '14px', fontWeight: '600' }}>TOTAL NOTES</span>
             <span className="font-chakra" style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>
@@ -126,6 +130,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
             </span>
           </div>
 
+          {/* 판정 세부 내역: PERFECT */}
           <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '14px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: '#facc15', fontSize: '14px', fontWeight: 'bold' }}>PERFECT</span>
             <span className="font-chakra" style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>
@@ -133,6 +138,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
             </span>
           </div>
 
+          {/* 판정 세부 내역: GOOD */}
           <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '14px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: '#38bdf8', fontSize: '14px', fontWeight: 'bold' }}>GOOD</span>
             <span className="font-chakra" style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>
@@ -140,6 +146,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
             </span>
           </div>
 
+          {/* 판정 세부 내역: FAST */}
           <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '14px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: '#c084fc', fontSize: '14px', fontWeight: 'bold' }}>FAST</span>
             <span className="font-chakra" style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>
@@ -147,6 +154,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
             </span>
           </div>
 
+          {/* 판정 세부 내역: FAIL */}
           <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '14px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: '#ef4444', fontSize: '14px', fontWeight: 'bold' }}>FAIL</span>
             <span className="font-chakra" style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>
@@ -155,7 +163,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({
           </div>
         </div>
 
-        {/* 20. 하단 초록색 음악 선택으로 돌아가기 버튼 */}
+        {/* 20. 화면 하단 초록색 음악 선택으로 돌아가기 버튼 (명세 요구사항) */}
         <button
           onClick={onReturnToMusicSelect}
           className="btn-green font-chakra"

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <!-- React, ReactDOM, Babel for instant standalone browser play without server -->
+  <!-- React, ReactDOM, Babel for zero-setup instant browser play -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -104,10 +104,10 @@
       },
       {
         id: 'song-04',
-        title: 'MEGALOVANIA',
-        artist: 'Toby Fox',
+        title: 'Freedom Dive',
+        artist: 'xi',
         category: 'VARIETY',
-        youtubeVideoId: 'KK3KXAECte4'
+        youtubeVideoId: '6q_ZqM_jJ5A'
       }
     ];
 
@@ -116,7 +116,7 @@
       const beat = 60 / bpm;
       const step = difficulty === 'easy' ? beat * 1.5 : difficulty === 'normal' ? beat * 0.75 : beat * 0.375;
       let id = 1;
-      for (let t = 2.0; t < 55.0; t += step) {
+      for (let t = 2.0; t < 50.0; t += step) {
         const lane = Math.floor((Math.sin(t * 1.8) + 1) * 2) % 4;
         const isSpecial = id % 7 === 0;
         const isHold = id % 11 === 0;
@@ -345,7 +345,7 @@
         const notes = generateNotes(difficulty);
         stateRef.current.notes = notes;
 
-        // 이론상 최대 가점 계산 (15콤보 이상 1.2배 가중치)
+        // 이론상 최대 가점 계산 (15콤보 이상 1.2배)
         let simCombo = 0;
         let maxScore = 0;
         for (const n of notes) {
@@ -376,7 +376,7 @@
           });
         }
 
-        // 키 입력 리스너 (D, F, J, K)
+        // 키 입력 리스너
         const handleKeyDown = (e) => {
           const map = { KeyD: 0, KeyF: 1, KeyJ: 2, KeyK: 3 };
           const lane = map[e.code];
@@ -397,14 +397,14 @@
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
 
-        // 메인 렌더 루프
+        // 렌더 루프
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
 
         const loop = () => {
           const currentTime = playerRef.current && playerRef.current.getCurrentTime ? (playerRef.current.getCurrentTime() - settings.globalOffset / 1000) : 0;
 
-          // 놓친 노트 FAIL 체크
+          // 놓친 노트 체크
           for (const n of stateRef.current.notes) {
             if (!n.isProcessed && currentTime - n.time > 0.2) {
               n.isProcessed = true;
@@ -412,7 +412,7 @@
             }
           }
 
-          // Canvas 렌더링 (좌측 10~15% 여백)
+          // 렌더
           renderCanvas(ctx, canvas, currentTime, settings.noteSpeed);
           stateRef.current.animId = requestAnimationFrame(loop);
         };
@@ -473,6 +473,7 @@
         setAccuracy(currentAcc);
         s.lastJudgement = { type, time: performance.now() };
 
+        // 모든 노트 처리 완료 시 자동 종료
         const unhandled = s.notes.some((n) => !n.isProcessed);
         if (!unhandled) {
           setTimeout(finish, 2000);
@@ -500,17 +501,17 @@
         const h = canvas.height = canvas.parentElement.clientHeight;
         ctx.clearRect(0, 0, w, h);
 
-        const marginLeft = w * 0.12; // 19.1 채보 영역: 좌측 10~15% 여백
+        const marginLeft = w * 0.12; // 좌측 10~15% 여백
         const trackW = Math.min(w * 0.76, 440);
         const laneW = trackW / 4;
         const judgeY = h * 0.84;
         const pps = 140 * speed;
 
-        // 트랙 배경
+        // 트랙
         ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
         ctx.fillRect(marginLeft, 0, trackW, h);
 
-        // 4레인 및 키 표시 (D, F, J, K)
+        // 레인
         const keys = ['D', 'F', 'J', 'K'];
         for (let l = 0; l < 4; l++) {
           const lx = marginLeft + l * laneW;
@@ -535,7 +536,7 @@
         ctx.beginPath();
         ctx.moveTo(marginLeft, judgeY); ctx.lineTo(marginLeft + trackW, judgeY); ctx.stroke();
 
-        // 떨어지는 노트 렌더링
+        // 노트
         for (const n of stateRef.current.notes) {
           if (n.isProcessed) continue;
           const ty = judgeY - (n.time - curTime) * pps;
@@ -550,7 +551,7 @@
           ctx.fill();
         }
 
-        // 판정 텍스트 (PERFECT, GOOD, FAST, FAIL)
+        // 판정 텍스트
         const lj = stateRef.current.lastJudgement;
         if (lj && performance.now() - lj.time < 500) {
           ctx.fillStyle = lj.type === 'PERFECT' ? '#facc15' : lj.type === 'GOOD' ? '#38bdf8' : '#ef4444';
@@ -559,7 +560,7 @@
           ctx.fillText(lj.type, marginLeft + trackW / 2, judgeY - 60);
         }
 
-        // 콤보 숫자
+        // 콤보
         if (stateRef.current.combo > 0) {
           ctx.fillStyle = stateRef.current.combo >= 15 ? '#facc15' : '#ffffff';
           ctx.font = '900 32px "Chakra Petch"';
@@ -570,12 +571,12 @@
 
       return (
         <div style={{ width: '100vw', height: '100vh', display: 'flex', background: '#090d16' }}>
-          {/* 19.1 채보 영역: 좌측 10~15% 여백 */}
+          {/* 좌측 채보 영역: 10~15% 여백 */}
           <div style={{ flex: '0 0 52%', height: '100%', paddingLeft: '6vw' }}>
             <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
           </div>
 
-          {/* 19.2 & 19.3 우측 영역: 정보창 + 유튜브 재생 (우측 10~15% 여백) */}
+          {/* 우측 영역: 정보창 + 유튜브 */}
           <div style={{ flex: '0 0 48%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingRight: '6vw' }}>
             <div style={{ position: 'absolute', top: '20px', right: '30px', display: 'flex', gap: '10px' }}>
               <button onClick={onOpenSettings} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>⚙</button>
@@ -589,7 +590,7 @@
               <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#38bdf8' }}>SUCCESSFUL RATING : {accuracy.toFixed(2)}%</div>
             </div>
 
-            {/* 19.2 유튜브 재생 영역 */}
+            {/* 유튜브 영상 영역 */}
             <div style={{ width: '100%', maxWidth: '540px', aspectRatio: '16/9', borderRadius: '14px', overflow: 'hidden', backgroundColor: '#000', border: '1px solid rgba(255,255,255,0.1)' }}>
               <div id="standalone-yt-player" style={{ width: '100%', height: '100%' }} />
             </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DifficultyLevel, GameResult, GameSettings, Song } from './types/game';
 import { DEFAULT_SONGS } from './data/songs';
 import { StartPage } from './pages/StartPage';
@@ -25,6 +25,7 @@ export const App: React.FC = () => {
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
+  // localStorage에서 게임 설정 불러오기 및 저장
   const [settings, setSettings] = useState<GameSettings>(() => {
     try {
       const saved = localStorage.getItem('read_rhythm_settings');
@@ -63,7 +64,7 @@ export const App: React.FC = () => {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      {/* 16. 시작 화면 */}
+      {/* 1. 시작 화면 */}
       {view === 'start' && (
         <StartPage
           onEnter={() => setView('music-select')}
@@ -72,7 +73,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* 17. 음악 선택 화면 */}
+      {/* 2. 음악 선택 화면 */}
       {view === 'music-select' && (
         <MusicSelectPage
           onSelectSong={handleSongSelect}
@@ -81,7 +82,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* 18. 난이도 선택 화면 (3초 카운트다운) */}
+      {/* 3. 난이도 선택 화면 (3초 카운트다운 포함) */}
       {view === 'difficulty-select' && (
         <DifficultySelectPage
           song={selectedSong}
@@ -90,7 +91,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* 19. 게임 플레이 화면 */}
+      {/* 4. 게임 플레이 화면 */}
       {view === 'game' && (
         <GamePage
           song={selectedSong}
@@ -102,7 +103,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* 20. 결과 화면 */}
+      {/* 5. 결과 화면 */}
       {view === 'result' && gameResult && (
         <ResultPage
           result={gameResult}
@@ -110,12 +111,12 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* 23. Chart Editor 화면 */}
+      {/* 6. Chart Editor 화면 */}
       {view === 'editor' && (
         <ChartEditorPage onBack={() => setView('start')} />
       )}
 
-      {/* 21. 환경설정 모달 (1ms 단위 싱크 조절) */}
+      {/* 7. 환경설정 모달 (노트 싱크 1ms 조절 등) */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

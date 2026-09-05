@@ -28,7 +28,7 @@ export interface NoteData {
   lane: Lane;
   type: NoteType;
   holdDuration?: number; // 초 단위 (hold 타입인 경우)
-  isProcessed?: boolean;
+  isProcessed?: boolean; // 판정 완료 여부
   judgement?: JudgementType;
 }
 
@@ -36,7 +36,7 @@ export interface ChartData {
   songId: string;
   difficulty: DifficultyLevel;
   bpm: number;
-  offset: number; // ms
+  offset: number; // 밀리초 단위 (ms)
   notes: NoteData[];
 }
 
@@ -47,17 +47,17 @@ export interface Song {
   category: MusicCategory;
   youtubeVideoId: string;
   jacketImage?: string;
-  previewStartTime?: number;
+  previewStartTime?: number; // 미리듣기 시작 시간 (초)
   charts: {
-    [key in DifficultyLevel]?: string;
+    [key in DifficultyLevel]?: string; // 채보 json 파일 경로 또는 내장 데이터 키
   };
 }
 
 export interface GameSettings {
-  noteSpeed: number; // 1.0 ~ 10.0 (기본값 4.0)
-  globalOffset: number; // 1ms 단위 싱크 조절 (ms)
-  bgDim: number;
-  hitVolume: number;
+  noteSpeed: number; // 배속 (1.0 ~ 10.0, 기본값 4.0)
+  globalOffset: number; // 싱크 조절 (ms, 기본값 0, 1ms 단위 조절)
+  bgDim: number; // 배경 영상 투명도 (0.0 ~ 1.0, 기본값 0.4)
+  hitVolume: number; // 효과음 볼륨 (0.0 ~ 1.0)
 }
 
 export interface JudgementCount {
@@ -82,6 +82,6 @@ export interface GameResult {
 export interface ActiveNoteState extends NoteData {
   spawned: boolean;
   activeHold?: boolean;
-  holdProgress?: number;
+  holdProgress?: number; // 0 ~ 1
   holdEndJudged?: boolean;
 }
