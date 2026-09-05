@@ -98,6 +98,7 @@ export class YouTubeTimingManager {
           showinfo: 0,
           iv_load_policy: 3,
           enablejsapi: 1,
+          // Provide origin URL to satisfy YouTube allowed sites policy
           origin: window.location.origin
         },
         events: {

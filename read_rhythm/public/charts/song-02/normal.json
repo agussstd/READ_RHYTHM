@@ -1,0 +1,33 @@
+{
+  "songId": "song-02",
+  "difficulty": "normal",
+  "bpm": 170,
+  "offset": 0,
+  "notes": [
+    { "id": "m-n-1", "time": 1.765, "lane": 0, "type": "tap" },
+    { "id": "m-n-2", "time": 2.118, "lane": 1, "type": "tap" },
+    { "id": "m-n-3", "time": 2.471, "lane": 2, "type": "tap" },
+    { "id": "m-n-4", "time": 2.824, "lane": 3, "type": "special" },
+    { "id": "m-n-5", "time": 3.176, "lane": 2, "type": "tap" },
+    { "id": "m-n-6", "time": 3.529, "lane": 1, "type": "tap" },
+    { "id": "m-n-7", "time": 3.882, "lane": 0, "type": "hold", "holdDuration": 0.7 },
+    { "id": "m-n-8", "time": 4.941, "lane": 3, "type": "tap" },
+    { "id": "m-n-9", "time": 5.294, "lane": 2, "type": "tap" },
+    { "id": "m-n-10", "time": 5.647, "lane": 1, "type": "special" },
+    { "id": "m-n-11", "time": 6.0, "lane": 0, "type": "tap" },
+    { "id": "m-n-12", "time": 6.353, "lane": 2, "type": "hold", "holdDuration": 0.8 },
+    { "id": "m-n-13", "time": 7.412, "lane": 1, "type": "tap" },
+    { "id": "m-n-14", "time": 7.765, "lane": 3, "type": "tap" },
+    { "id": "m-n-15", "time": 8.118, "lane": 0, "type": "special" },
+    { "id": "m-n-16", "time": 8.471, "lane": 1, "type": "tap" },
+    { "id": "m-n-17", "time": 8.824, "lane": 2, "type": "tap" },
+    { "id": "m-n-18", "time": 9.176, "lane": 3, "type": "hold", "holdDuration": 0.9 },
+    { "id": "m-n-19", "time": 10.235, "lane": 0, "type": "tap" },
+    { "id": "m-n-20", "time": 10.588, "lane": 1, "type": "tap" },
+    { "id": "m-n-21", "time": 10.941, "lane": 2, "type": "tap" },
+    { "id": "m-n-22", "time": 11.294, "lane": 3, "type": "tap" },
+    { "id": "m-n-23", "time": 11.647, "lane": 1, "type": "special" },
+    { "id": "m-n-24", "time": 12.0, "lane": 2, "type": "tap" },
+    { "id": "m-n-25", "time": 12.353, "lane": 0, "type": "hold", "holdDuration": 1.0 }
+  ]
+}

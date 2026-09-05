@@ -1,0 +1,26 @@
+{
+  "songId": "song-02",
+  "difficulty": "easy",
+  "bpm": 170,
+  "offset": 0,
+  "notes": [
+    { "id": "m-e-1", "time": 2.118, "lane": 0, "type": "tap" },
+    { "id": "m-e-2", "time": 2.824, "lane": 1, "type": "tap" },
+    { "id": "m-e-3", "time": 3.529, "lane": 2, "type": "tap" },
+    { "id": "m-e-4", "time": 4.235, "lane": 3, "type": "special" },
+    { "id": "m-e-5", "time": 4.941, "lane": 2, "type": "tap" },
+    { "id": "m-e-6", "time": 5.647, "lane": 1, "type": "tap" },
+    { "id": "m-e-7", "time": 6.353, "lane": 0, "type": "hold", "holdDuration": 1.2 },
+    { "id": "m-e-8", "time": 8.118, "lane": 3, "type": "tap" },
+    { "id": "m-e-9", "time": 8.824, "lane": 2, "type": "tap" },
+    { "id": "m-e-10", "time": 9.529, "lane": 1, "type": "special" },
+    { "id": "m-e-11", "time": 10.235, "lane": 0, "type": "tap" },
+    { "id": "m-e-12", "time": 10.941, "lane": 2, "type": "hold", "holdDuration": 1.0 },
+    { "id": "m-e-13", "time": 12.706, "lane": 1, "type": "tap" },
+    { "id": "m-e-14", "time": 13.412, "lane": 3, "type": "tap" },
+    { "id": "m-e-15", "time": 14.118, "lane": 0, "type": "special" },
+    { "id": "m-e-16", "time": 14.824, "lane": 1, "type": "tap" },
+    { "id": "m-e-17", "time": 15.529, "lane": 2, "type": "tap" },
+    { "id": "m-e-18", "time": 16.235, "lane": 3, "type": "hold", "holdDuration": 1.4 }
+  ]
+}
