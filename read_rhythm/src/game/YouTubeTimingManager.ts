@@ -50,7 +50,6 @@ export class YouTubeTimingManager {
         checkReady();
       };
 
-      // 만약 이벤트 누락 발생 시 50ms 주기로 폴링하여 안전하게 resolve
       const interval = setInterval(() => {
         if (checkReady()) {
           clearInterval(interval);
@@ -107,11 +106,12 @@ export class YouTubeTimingManager {
             resolve();
           },
           onStateChange: (event: any) => {
-            if (event.data === 1) { // PLAYING
+            // YT.PlayerState.PLAYING = 1, ENDED = 0, PAUSED = 2, BUFFERING = 3
+            if (event.data === 1) {
               this.isPlaying = true;
               this.lastKnownTime = this.player.getCurrentTime();
               this.lastUpdateTimestamp = performance.now();
-            } else if (event.data === 0) { // ENDED
+            } else if (event.data === 0) {
               this.isPlaying = false;
               if (this.onEndedCallback) this.onEndedCallback();
             } else {
@@ -155,6 +155,9 @@ export class YouTubeTimingManager {
   /**
    * 핵심 메인 타임 클록 (초 단위 반환)
    * 오프셋(songOffset + userOffset)이 감안된 정밀 시간 반환
+   * YouTube getCurrentTime()의 갱신 주기(약 100~250ms) 한계를
+   * performance.now() 보간을 통해 정밀 마이크로초 단위로 보정하되,
+   * 버퍼링 및 드리프트를 getCurrentTime()과 주기적으로 재동기화함.
    */
   public getCurrentGameTime(): number {
     if (!this.player || !this.isReady) {
@@ -167,15 +170,21 @@ export class YouTubeTimingManager {
       try {
         const rawTime = this.player.getCurrentTime();
         if (typeof rawTime === 'number' && !isNaN(rawTime)) {
+          // YouTube 플레이어의 시간이 전진했을 때 기준점 업데이트
           if (rawTime !== this.lastKnownTime) {
             this.lastKnownTime = rawTime;
             this.lastUpdateTimestamp = now;
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        // IFrame 통신 일시 오류 무시
+      }
 
+      // 프레임간 시간 보간 (최대 0.3초 한도)
       const elapsedSinceUpdate = Math.min((now - this.lastUpdateTimestamp) / 1000, 0.3);
       const interpolatedTime = this.lastKnownTime + elapsedSinceUpdate;
+
+      // 총 오프셋 (초 단위) 적용
       const totalOffsetSec = (this.songOffset + this.userOffset) / 1000;
       return Math.max(0, interpolatedTime - totalOffsetSec);
     }

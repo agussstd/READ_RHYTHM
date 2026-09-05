@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>READ_RHYTHM - Web 4-Key Rhythm Game (Standalone)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- React, ReactDOM, Babel for instant standalone browser play without server -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --accent-cyan: #38bdf8;
+      --accent-green: #22c55e;
+      --accent-orange: #f97316;
+      --accent-red: #ef4444;
+      --accent-purple: #a855f7;
+      --accent-yellow: #facc15;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background-color: var(--bg-dark);
+      color: #ffffff;
+      font-family: 'Noto Sans KR', 'Chakra Petch', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    .font-chakra { font-family: 'Chakra Petch', monospace, sans-serif; }
+    .glass-panel {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.5), inset 0 0 15px rgba(34, 197, 94, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.8), inset 0 0 25px rgba(34, 197, 94, 0.5); }
+    }
+    .btn-enter {
+      background: linear-gradient(135deg, #22c55e, #15803d);
+      color: white;
+      border: 2px solid #4ade80;
+      animation: pulse-glow 2s infinite ease-in-out;
+      transition: all 0.2s;
+    }
+    .btn-enter:hover { transform: scale(1.05); }
+    .btn-green { background: #22c55e; color: white; transition: all 0.2s; }
+    .btn-green:hover { background: #16a34a; transform: translateY(-2px); }
+    @keyframes countdown-zoom {
+      0% { transform: scale(2); opacity: 0; }
+      50% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0.8); opacity: 0; }
+    }
+    .countdown-number { animation: countdown-zoom 1s ease-in-out forwards; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const CATEGORIES = ['VOCALOID', 'J-POP', 'VARIETY'];
+    const DIFFICULTY_COLORS = {
+      easy: '#22c55e',
+      normal: '#f97316',
+      hard: '#ef4444',
+      master: '#a855f7'
+    };
+    const DIFFICULTY_NAMES = {
+      easy: 'かんたん',
+      normal: 'ふつう',
+      hard: 'むずかしい',
+      master: 'マスター'
+    };
+
+    const SONGS = [
+      {
+        id: 'song-01',
+        title: 'World is Mine',
+        artist: 'ryo (supercell) feat. 初音ミク',
+        category: 'VOCALOID',
+        youtubeVideoId: 'DTxlh8_5J7g'
+      },
+      {
+        id: 'song-02',
+        title: 'Melt (メルト)',
+        artist: 'ryo (supercell) feat. 初音ミク',
+        category: 'VOCALOID',
+        youtubeVideoId: 'o1jAMSQQ4-M'
+      },
+      {
+        id: 'song-03',
+        title: 'アイドル (Idol)',
+        artist: 'YOASOBI',
+        category: 'J-POP',
+        youtubeVideoId: 'ZRtdQ81jPUQ'
+      },
+      {
+        id: 'song-04',
+        title: 'MEGALOVANIA',
+        artist: 'Toby Fox',
+        category: 'VARIETY',
+        youtubeVideoId: 'KK3KXAECte4'
+      }
+    ];
+
+    function generateNotes(difficulty, bpm = 163) {
+      const notes = [];
+      const beat = 60 / bpm;
+      const step = difficulty === 'easy' ? beat * 1.5 : difficulty === 'normal' ? beat * 0.75 : beat * 0.375;
+      let id = 1;
+      for (let t = 2.0; t < 55.0; t += step) {
+        const lane = Math.floor((Math.sin(t * 1.8) + 1) * 2) % 4;
+        const isSpecial = id % 7 === 0;
+        const isHold = id % 11 === 0;
+        notes.push({
+          id: `n-${id++}`,
+          time: parseFloat(t.toFixed(3)),
+          lane,
+          type: isHold ? 'hold' : isSpecial ? 'special' : 'tap',
+          holdDuration: isHold ? 0.8 : undefined,
+          isProcessed: false
+        });
+        if (difficulty === 'master' && id % 5 === 0) {
+          notes.push({
+            id: `n-${id++}`,
+            time: parseFloat(t.toFixed(3)),
+            lane: (lane + 2) % 4,
+            type: 'tap',
+            isProcessed: false
+          });
+        }
+      }
+      return notes;
+    }
+
+    function StandaloneApp() {
+      const [view, setView] = useState('start');
+      const [selectedSong, setSelectedSong] = useState(SONGS[0]);
+      const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
+      const [gameResult, setGameResult] = useState(null);
+      const [settings, setSettings] = useState(() => {
+        try {
+          const s = localStorage.getItem('read_rhythm_settings');
+          return s ? JSON.parse(s) : { noteSpeed: 4.0, globalOffset: 0 };
+        } catch { return { noteSpeed: 4.0, globalOffset: 0 }; }
+      });
+      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+      const saveSettings = (newS) => {
+        setSettings(newS);
+        localStorage.setItem('read_rhythm_settings', JSON.stringify(newS));
+      };
+
+      return (
+        <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+          {view === 'start' && (
+            <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at 50% 40%, #1e1b4b 0%, #090d16 85%)' }}>
+              <div style={{ position: 'absolute', top: '24px', right: '32px' }}>
+                <button onClick={() => setIsSettingsOpen(true)} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '42px', height: '42px', borderRadius: '50%', fontSize: '20px', cursor: 'pointer' }}>⚙</button>
+              </div>
+              <h1 className="font-chakra" style={{ fontSize: '72px', fontWeight: '900', letterSpacing: '6px', background: 'linear-gradient(180deg, #ffffff 30%, #38bdf8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '10px' }}>
+                READ_RHYTHM
+              </h1>
+              <p style={{ color: '#94a3b8', fontSize: '18px', letterSpacing: '4px', marginBottom: '60px' }}>
+                WEB 4-KEY BROWSER RHYTHM EXPERIENCE
+              </p>
+              <button onClick={() => setView('music-select')} className="btn-enter font-chakra" style={{ width: '260px', height: '70px', borderRadius: '35px', fontSize: '28px', fontWeight: '800', cursor: 'pointer' }}>
+                ENTER
+              </button>
+              <div style={{ position: 'absolute', bottom: '30px', color: '#475569', fontSize: '14px' }}>
+                KEYS: [ D ] &nbsp; [ F ] &nbsp; [ J ] &nbsp; [ K ]
+              </div>
+            </div>
+          )}
+
+          {view === 'music-select' && (
+            <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', padding: '24px 40px', background: 'radial-gradient(ellipse at top, #172554 0%, #090d16 100%)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <button onClick={() => setView('start')} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>← BACK</button>
+                <h1 className="font-chakra" style={{ fontSize: '28px' }}>SELECT MUSIC</h1>
+                <button onClick={() => setIsSettingsOpen(true)} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>⚙</button>
+              </div>
+              <div style={{ flex: 1, display: 'flex', gap: '24px', alignItems: 'center', justifyContent: 'center' }}>
+                {SONGS.map((song) => (
+                  <div key={song.id} onClick={() => { setSelectedSong(song); setView('difficulty-select'); }} className="glass-panel" style={{ width: '260px', height: '420px', borderRadius: '20px', padding: '20px', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: selectedSong.id === song.id ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ width: '100%', height: '220px', borderRadius: '12px', backgroundImage: `url(https://img.youtube.com/vi/${song.youtubeVideoId}/hqdefault.jpg)`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                    <div>
+                      <div style={{ color: '#38bdf8', fontSize: '12px', fontWeight: 'bold' }}>{song.category}</div>
+                      <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{song.title}</h3>
+                      <p style={{ fontSize: '13px', color: '#94a3b8' }}>{song.artist}</p>
+                    </div>
+                    <button className="btn-green font-chakra" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>SELECT</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {view === 'difficulty-select' && (
+            <DifficultyView
+              song={selectedSong}
+              onBack={() => setView('music-select')}
+              onStart={(diff) => { setSelectedDifficulty(diff); setView('game'); }}
+            />
+          )}
+
+          {view === 'game' && (
+            <GameView
+              song={selectedSong}
+              difficulty={selectedDifficulty}
+              settings={settings}
+              onEnd={(res) => { setGameResult(res); setView('result'); }}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              onExit={() => setView('music-select')}
+            />
+          )}
+
+          {view === 'result' && gameResult && (
+            <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(ellipse at center, #1e1b4b 0%, #090d16 100%)' }}>
+              <div className="glass-panel" style={{ maxWidth: '720px', width: '100%', padding: '36px', borderRadius: '24px', textAlign: 'center' }}>
+                <h1 style={{ fontSize: '32px', color: '#fff' }}>{gameResult.songTitle}</h1>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '50px', margin: '24px 0', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ color: '#94a3b8', fontSize: '14px' }}>RANK</div>
+                    <div className="font-chakra" style={{ fontSize: '84px', fontWeight: '900', color: gameResult.rank === 'S' ? '#facc15' : '#38bdf8' }}>{gameResult.rank}</div>
+                  </div>
+                  <div>
+                    <div style={{ color: '#94a3b8', fontSize: '14px' }}>ACCURACY</div>
+                    <div className="font-chakra" style={{ fontSize: '46px', fontWeight: '900', color: '#38bdf8' }}>{gameResult.accuracy.toFixed(2)}%</div>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '28px' }}>
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px' }}>MAX COMBO: <strong>{gameResult.maxCombo}</strong></div>
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px' }}>PERFECT: <strong>{gameResult.perfect}</strong></div>
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px' }}>GOOD: <strong>{gameResult.good}</strong></div>
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px' }}>FAST/FAIL: <strong>{gameResult.fastFail}</strong></div>
+                </div>
+                <button onClick={() => setView('music-select')} className="btn-green font-chakra" style={{ padding: '14px 40px', borderRadius: '12px', border: 'none', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  음악 선택으로 돌아가기
+                </button>
+              </div>
+            </div>
+          )}
+
+          {isSettingsOpen && (
+            <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
+              <div className="glass-panel" style={{ width: '420px', padding: '24px', borderRadius: '16px' }}>
+                <h3 className="font-chakra" style={{ color: '#38bdf8', marginBottom: '16px' }}>SYSTEM SETTINGS</h3>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span>노트 싱크 오프셋</span>
+                    <span className="font-chakra" style={{ color: '#facc15' }}>{settings.globalOffset} ms</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button onClick={() => saveSettings({ ...settings, globalOffset: settings.globalOffset - 1 })} style={{ padding: '6px 12px', background: '#0284c7', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}>-1ms</button>
+                    <input type="range" min="-200" max="200" value={settings.globalOffset} onChange={(e) => saveSettings({ ...settings, globalOffset: parseInt(e.target.value) })} style={{ flex: 1 }} />
+                    <button onClick={() => saveSettings({ ...settings, globalOffset: settings.globalOffset + 1 })} style={{ padding: '6px 12px', background: '#0284c7', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}>+1ms</button>
+                  </div>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span>노트 낙하 배속</span>
+                    <span className="font-chakra" style={{ color: '#38bdf8' }}>{settings.noteSpeed.toFixed(1)}x</span>
+                  </div>
+                  <input type="range" min="1.0" max="9.0" step="0.2" value={settings.noteSpeed} onChange={(e) => saveSettings({ ...settings, noteSpeed: parseFloat(e.target.value) })} style={{ width: '100%' }} />
+                </div>
+                <button onClick={() => setIsSettingsOpen(false)} className="btn-green" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>닫기</button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function DifficultyView({ song, onBack, onStart }) {
+      const [countdown, setCountdown] = useState(null);
+      const [chosen, setChosen] = useState(null);
+
+      useEffect(() => {
+        if (countdown === null) return;
+        if (countdown > 0) {
+          const t = setTimeout(() => setCountdown(countdown - 1), 1000);
+          return () => clearTimeout(t);
+        } else {
+          onStart(chosen);
+        }
+      }, [countdown, chosen]);
+
+      return (
+        <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at center, #1e1b4b 0%, #090d16 100%)' }}>
+          {countdown !== null && countdown > 0 && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+              <div className="countdown-number font-chakra" style={{ fontSize: '150px', fontWeight: '900', color: DIFFICULTY_COLORS[chosen] }}>{countdown}</div>
+              <div className="font-chakra" style={{ fontSize: '24px', letterSpacing: '4px', color: '#94a3b8' }}>GET READY...</div>
+            </div>
+          )}
+          <button onClick={onBack} style={{ position: 'absolute', top: '30px', left: '40px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer' }}>← BACK</button>
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <h2 style={{ fontSize: '36px', fontWeight: '900' }}>{song.title}</h2>
+            <p style={{ color: '#94a3b8' }}>{song.artist}</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', maxWidth: '900px', width: '100%' }}>
+            {['easy', 'normal', 'hard', 'master'].map((diff) => (
+              <button key={diff} onClick={() => { setChosen(diff); setCountdown(3); }} className="glass-panel" style={{ border: `2px solid ${DIFFICULTY_COLORS[diff]}`, padding: '32px 16px', borderRadius: '16px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span className="font-chakra" style={{ color: DIFFICULTY_COLORS[diff], fontWeight: 'bold', marginBottom: '8px' }}>{diff.toUpperCase()}</span>
+                <span style={{ fontSize: '28px', fontWeight: 'bold', color: '#fff', marginBottom: '16px' }}>{DIFFICULTY_NAMES[diff]}</span>
+                <div style={{ background: DIFFICULTY_COLORS[diff], color: '#000', padding: '4px 14px', borderRadius: '12px', fontWeight: 'bold', fontSize: '12px' }}>PLAY</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function GameView({ song, difficulty, settings, onEnd, onOpenSettings, onExit }) {
+      const canvasRef = useRef(null);
+      const playerRef = useRef(null);
+      const [maxCombo, setMaxCombo] = useState(0);
+      const [accuracy, setAccuracy] = useState(100.0);
+      const [isPlayerReady, setIsPlayerReady] = useState(false);
+
+      const stateRef = useRef({
+        combo: 0,
+        maxCombo: 0,
+        perfect: 0,
+        good: 0,
+        fastFail: 0,
+        earnedScore: 0,
+        maxPossibleScore: 1,
+        keys: [false, false, false, false],
+        notes: [],
+        lastJudgement: null,
+        animId: null
+      });
+
+      useEffect(() => {
+        const notes = generateNotes(difficulty);
+        stateRef.current.notes = notes;
+
+        // 이론상 최대 가점 계산 (15콤보 이상 1.2배 가중치)
+        let simCombo = 0;
+        let maxScore = 0;
+        for (const n of notes) {
+          simCombo++;
+          const mult = simCombo >= 15 ? 1.2 : 1.0;
+          const weight = n.type === 'special' ? 1.2 : 1.0;
+          maxScore += 1.0 * mult * weight;
+        }
+        stateRef.current.maxPossibleScore = maxScore || 1;
+
+        // YouTube Player 초기화
+        const container = document.getElementById('standalone-yt-player');
+        if (window.YT && window.YT.Player) {
+          playerRef.current = new window.YT.Player('standalone-yt-player', {
+            videoId: song.youtubeVideoId,
+            width: '100%',
+            height: '100%',
+            playerVars: { autoplay: 1, controls: 0, disablekb: 1 },
+            events: {
+              onReady: () => {
+                setIsPlayerReady(true);
+                playerRef.current.playVideo();
+              },
+              onStateChange: (e) => {
+                if (e.data === 0) finish();
+              }
+            }
+          });
+        }
+
+        // 키 입력 리스너 (D, F, J, K)
+        const handleKeyDown = (e) => {
+          const map = { KeyD: 0, KeyF: 1, KeyJ: 2, KeyK: 3 };
+          const lane = map[e.code];
+          if (lane !== undefined) {
+            e.preventDefault();
+            stateRef.current.keys[lane] = true;
+            judgeLaneHit(lane);
+          }
+        };
+        const handleKeyUp = (e) => {
+          const map = { KeyD: 0, KeyF: 1, KeyJ: 2, KeyK: 3 };
+          const lane = map[e.code];
+          if (lane !== undefined) {
+            stateRef.current.keys[lane] = false;
+          }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        // 메인 렌더 루프
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+
+        const loop = () => {
+          const currentTime = playerRef.current && playerRef.current.getCurrentTime ? (playerRef.current.getCurrentTime() - settings.globalOffset / 1000) : 0;
+
+          // 놓친 노트 FAIL 체크
+          for (const n of stateRef.current.notes) {
+            if (!n.isProcessed && currentTime - n.time > 0.2) {
+              n.isProcessed = true;
+              recordJudge('FAIL', 0.0, n);
+            }
+          }
+
+          // Canvas 렌더링 (좌측 10~15% 여백)
+          renderCanvas(ctx, canvas, currentTime, settings.noteSpeed);
+          stateRef.current.animId = requestAnimationFrame(loop);
+        };
+        stateRef.current.animId = requestAnimationFrame(loop);
+
+        return () => {
+          window.removeEventListener('keydown', handleKeyDown);
+          window.removeEventListener('keyup', handleKeyUp);
+          if (stateRef.current.animId) cancelAnimationFrame(stateRef.current.animId);
+          if (playerRef.current && playerRef.current.destroy) playerRef.current.destroy();
+        };
+      }, [song, difficulty]);
+
+      const judgeLaneHit = (lane) => {
+        const currentTime = playerRef.current && playerRef.current.getCurrentTime ? (playerRef.current.getCurrentTime() - settings.globalOffset / 1000) : 0;
+        for (const n of stateRef.current.notes) {
+          if (!n.isProcessed && n.lane === lane) {
+            const diff = Math.abs(currentTime - n.time);
+            if (diff <= 0.05) {
+              n.isProcessed = true;
+              recordJudge('PERFECT', 1.0, n);
+              return;
+            } else if (diff <= 0.10) {
+              n.isProcessed = true;
+              recordJudge('GOOD', 0.5, n);
+              return;
+            } else if (diff <= 0.15) {
+              n.isProcessed = true;
+              recordJudge('FAST', 0.3, n);
+              return;
+            } else if (diff <= 0.20) {
+              n.isProcessed = true;
+              recordJudge('FAIL', 0.0, n);
+              return;
+            }
+          }
+        }
+      };
+
+      const recordJudge = (type, rate, note) => {
+        const s = stateRef.current;
+        if (type === 'PERFECT' || type === 'GOOD') {
+          s.combo++;
+          if (s.combo > s.maxCombo) s.maxCombo = s.combo;
+          if (type === 'PERFECT') s.perfect++;
+          else s.good++;
+        } else {
+          s.combo = 0;
+          s.fastFail++;
+        }
+
+        const mult = s.combo >= 15 ? 1.2 : 1.0;
+        const weight = note.type === 'special' ? 1.2 : 1.0;
+        s.earnedScore += rate * mult * weight;
+
+        const currentAcc = Math.min(100.0, (s.earnedScore / s.maxPossibleScore) * 100);
+        setMaxCombo(s.maxCombo);
+        setAccuracy(currentAcc);
+        s.lastJudgement = { type, time: performance.now() };
+
+        const unhandled = s.notes.some((n) => !n.isProcessed);
+        if (!unhandled) {
+          setTimeout(finish, 2000);
+        }
+      };
+
+      const finish = () => {
+        const s = stateRef.current;
+        const acc = Math.min(100.0, (s.earnedScore / s.maxPossibleScore) * 100);
+        const rank = acc >= 95 ? 'S' : acc >= 85 ? 'A' : acc >= 75 ? 'B' : acc >= 65 ? 'C' : 'F';
+        onEnd({
+          songTitle: song.title,
+          artist: song.artist,
+          accuracy: acc,
+          rank,
+          maxCombo: s.maxCombo,
+          perfect: s.perfect,
+          good: s.good,
+          fastFail: s.fastFail
+        });
+      };
+
+      const renderCanvas = (ctx, canvas, curTime, speed) => {
+        const w = canvas.width = canvas.parentElement.clientWidth;
+        const h = canvas.height = canvas.parentElement.clientHeight;
+        ctx.clearRect(0, 0, w, h);
+
+        const marginLeft = w * 0.12; // 19.1 채보 영역: 좌측 10~15% 여백
+        const trackW = Math.min(w * 0.76, 440);
+        const laneW = trackW / 4;
+        const judgeY = h * 0.84;
+        const pps = 140 * speed;
+
+        // 트랙 배경
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(marginLeft, 0, trackW, h);
+
+        // 4레인 및 키 표시 (D, F, J, K)
+        const keys = ['D', 'F', 'J', 'K'];
+        for (let l = 0; l < 4; l++) {
+          const lx = marginLeft + l * laneW;
+          if (stateRef.current.keys[l]) {
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.3)';
+            ctx.fillRect(lx, 0, laneW, judgeY);
+          }
+          ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+          ctx.beginPath();
+          ctx.moveTo(lx, 0); ctx.lineTo(lx, h); ctx.stroke();
+          ctx.fillStyle = stateRef.current.keys[l] ? '#38bdf8' : 'rgba(255,255,255,0.4)';
+          ctx.font = 'bold 16px "Chakra Petch"';
+          ctx.textAlign = 'center';
+          ctx.fillText(keys[l], lx + laneW / 2, judgeY + 40);
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.strokeRect(marginLeft, 0, trackW, h);
+
+        // 판정선
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(marginLeft, judgeY); ctx.lineTo(marginLeft + trackW, judgeY); ctx.stroke();
+
+        // 떨어지는 노트 렌더링
+        for (const n of stateRef.current.notes) {
+          if (n.isProcessed) continue;
+          const ty = judgeY - (n.time - curTime) * pps;
+          if (ty < -50 || ty > h + 50) continue;
+
+          const lx = marginLeft + n.lane * laneW + 4;
+          const nw = laneW - 8;
+
+          ctx.fillStyle = n.type === 'special' ? '#facc15' : '#ef4444';
+          ctx.beginPath();
+          ctx.roundRect(lx, ty - 10, nw, 20, 6);
+          ctx.fill();
+        }
+
+        // 판정 텍스트 (PERFECT, GOOD, FAST, FAIL)
+        const lj = stateRef.current.lastJudgement;
+        if (lj && performance.now() - lj.time < 500) {
+          ctx.fillStyle = lj.type === 'PERFECT' ? '#facc15' : lj.type === 'GOOD' ? '#38bdf8' : '#ef4444';
+          ctx.font = '900 24px "Chakra Petch"';
+          ctx.textAlign = 'center';
+          ctx.fillText(lj.type, marginLeft + trackW / 2, judgeY - 60);
+        }
+
+        // 콤보 숫자
+        if (stateRef.current.combo > 0) {
+          ctx.fillStyle = stateRef.current.combo >= 15 ? '#facc15' : '#ffffff';
+          ctx.font = '900 32px "Chakra Petch"';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${stateRef.current.combo} COMBO`, marginLeft + trackW / 2, judgeY - 95);
+        }
+      };
+
+      return (
+        <div style={{ width: '100vw', height: '100vh', display: 'flex', background: '#090d16' }}>
+          {/* 19.1 채보 영역: 좌측 10~15% 여백 */}
+          <div style={{ flex: '0 0 52%', height: '100%', paddingLeft: '6vw' }}>
+            <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
+          </div>
+
+          {/* 19.2 & 19.3 우측 영역: 정보창 + 유튜브 재생 (우측 10~15% 여백) */}
+          <div style={{ flex: '0 0 48%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingRight: '6vw' }}>
+            <div style={{ position: 'absolute', top: '20px', right: '30px', display: 'flex', gap: '10px' }}>
+              <button onClick={onOpenSettings} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>⚙</button>
+              <button onClick={onExit} style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#f87171', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            {/* 19.3 상단 정보창 (중앙 정렬 3줄) */}
+            <div className="glass-panel font-chakra" style={{ width: '100%', maxWidth: '540px', padding: '16px 20px', borderRadius: '14px', marginBottom: '20px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{DIFFICULTY_NAMES[difficulty].toUpperCase()} : {song.title}</div>
+              <div style={{ fontSize: '22px', fontWeight: '800', color: '#facc15' }}>MAXIMUM COMBO : {maxCombo}</div>
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#38bdf8' }}>SUCCESSFUL RATING : {accuracy.toFixed(2)}%</div>
+            </div>
+
+            {/* 19.2 유튜브 재생 영역 */}
+            <div style={{ width: '100%', maxWidth: '540px', aspectRatio: '16/9', borderRadius: '14px', overflow: 'hidden', backgroundColor: '#000', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div id="standalone-yt-player" style={{ width: '100%', height: '100%' }} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<StandaloneApp />, document.getElementById('root'));
+  </script>
+</body>
+</html>
