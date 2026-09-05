@@ -77,7 +77,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </button>
         </div>
 
-        {/* 1ms 싱크 오프셋 조절 */}
+        {/* 1ms 싱크 조절 (핵심 요구사항) */}
         <div style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '15px', color: '#cbd5e1' }}>노트 싱크 오프셋 (Sync Offset)</span>
@@ -168,6 +168,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
+        {/* 키 바인딩 안내 */}
         <div style={{
           backgroundColor: '#0f172a',
           padding: '14px',

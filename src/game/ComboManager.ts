@@ -15,6 +15,7 @@ export class ComboManager {
         this.maxCombo = this.currentCombo;
       }
     } else {
+      // FAST 또는 FAIL 시 콤보 리셋
       this.currentCombo = 0;
     }
 

@@ -19,6 +19,7 @@ export const MusicSelectPage: React.FC<MusicSelectPageProps> = ({
   const [selectedSongId, setSelectedSongId] = useState<string>(DEFAULT_SONGS[0].id);
 
   const filteredSongs = DEFAULT_SONGS.filter((s) => s.category === activeCategory);
+  const currentSong = DEFAULT_SONGS.find((s) => s.id === selectedSongId) || filteredSongs[0];
 
   return (
     <div style={{
@@ -31,6 +32,7 @@ export const MusicSelectPage: React.FC<MusicSelectPageProps> = ({
       padding: '24px 40px',
       overflow: 'hidden'
     }}>
+      {/* 상단 네비게이션 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <button
@@ -53,7 +55,7 @@ export const MusicSelectPage: React.FC<MusicSelectPageProps> = ({
           </h1>
         </div>
 
-        {/* 17. 3개 카테고리 탭 (J-POP, VOCALOID, VARIETY) */}
+        {/* 카테고리 탭 (J-POP, VOCALOID, VARIETY) */}
         <div style={{ display: 'flex', gap: '10px', background: 'rgba(0,0,0,0.4)', padding: '6px', borderRadius: '12px' }}>
           {CATEGORIES.map((cat) => (
             <button
@@ -81,6 +83,7 @@ export const MusicSelectPage: React.FC<MusicSelectPageProps> = ({
           ))}
         </div>
 
+        {/* 설정 버튼 */}
         <button
           onClick={onOpenSettings}
           title="설정"
@@ -102,8 +105,9 @@ export const MusicSelectPage: React.FC<MusicSelectPageProps> = ({
         </button>
       </div>
 
-      {/* 17. 세로형 직사각형 형태의 곡 선택 카드 리스트 */}
+      {/* 중앙 메인 영역: 세로형 직사각형 곡 리스트 (17. 명세 요구사항) */}
       <div style={{ flex: 1, display: 'flex', gap: '40px', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        {/* 세로형 직사각형 카드 캐러셀/그리드 */}
         <div style={{
           display: 'flex',
           gap: '24px',
@@ -137,6 +141,7 @@ export const MusicSelectPage: React.FC<MusicSelectPageProps> = ({
                   overflow: 'hidden'
                 }}
               >
+                {/* 썸네일 이미지 영역 */}
                 <div style={{
                   width: '100%',
                   height: '220px',
@@ -149,6 +154,7 @@ export const MusicSelectPage: React.FC<MusicSelectPageProps> = ({
                   marginBottom: '16px'
                 }} />
 
+                {/* 곡 정보 */}
                 <div style={{ flex: 1 }}>
                   <div style={{
                     color: '#38bdf8',
@@ -182,6 +188,7 @@ export const MusicSelectPage: React.FC<MusicSelectPageProps> = ({
                   </p>
                 </div>
 
+                {/* 선택 버튼 */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

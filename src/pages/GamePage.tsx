@@ -24,6 +24,7 @@ export const GamePage: React.FC<GamePageProps> = ({
   const engineRef = useRef<GameEngine | null>(null);
   const youtubeContainerId = 'youtube-player-container';
 
+  // 상단 정보 표시 상태
   const [maxCombo, setMaxCombo] = useState<number>(0);
   const [accuracy, setAccuracy] = useState<number>(100.0);
   const [isEngineReady, setIsEngineReady] = useState<boolean>(false);
@@ -36,6 +37,7 @@ export const GamePage: React.FC<GamePageProps> = ({
       engineRef.current = engine;
 
       if (canvasRef.current) {
+        // 반응형 크기 설정
         const rect = canvasRef.current.parentElement?.getBoundingClientRect();
         if (rect) {
           canvasRef.current.width = rect.width;
@@ -44,9 +46,11 @@ export const GamePage: React.FC<GamePageProps> = ({
         engine.setCanvas(canvasRef.current);
       }
 
+      // 채보 데이터 로딩
       const chart = await fetchChart(song.id, difficulty);
       if (isCancelled) return;
 
+      // 게임 준비
       await engine.prepareGame(youtubeContainerId, song, chart, {
         onUpdateStats: (stats) => {
           setMaxCombo(stats.maxCombo);
@@ -65,6 +69,7 @@ export const GamePage: React.FC<GamePageProps> = ({
 
     setupEngine();
 
+    // 윈도우 리사이즈 리스너
     const handleResize = () => {
       if (canvasRef.current && engineRef.current) {
         const rect = canvasRef.current.parentElement?.getBoundingClientRect();
@@ -86,6 +91,7 @@ export const GamePage: React.FC<GamePageProps> = ({
     };
   }, [song, difficulty]);
 
+  // 설정값 실시간 반영 (싱크 오프셋, 배속 등)
   useEffect(() => {
     if (engineRef.current) {
       engineRef.current.updateSettings(settings);
@@ -103,7 +109,7 @@ export const GamePage: React.FC<GamePageProps> = ({
       backgroundColor: '#090d16',
       overflow: 'hidden'
     }}>
-      {/* 19.1 채보 영역: 왼쪽 끝에서 10~15% 여백 */}
+      {/* 19.1 채보 영역 (노트 슬라이더): 전체 화면 좌측, 왼쪽 끝에서 10~15% 여백 확보 */}
       <div style={{
         flex: '0 0 52%',
         height: '100%',
@@ -111,6 +117,7 @@ export const GamePage: React.FC<GamePageProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-start',
+        // 10~15% 여백: padding-left 12vw
         paddingLeft: '6vw'
       }}>
         <canvas
@@ -123,7 +130,7 @@ export const GamePage: React.FC<GamePageProps> = ({
         />
       </div>
 
-      {/* 19.2 & 19.3 우측 영역: 상단 정보창 + 유튜브 재생 (오른쪽 끝 10~15% 여백) */}
+      {/* 우측 영역: 상단 정보 표시 영역 + 유튜브 재생 영역 (오른쪽 끝 10~15% 여백 확보) */}
       <div style={{
         flex: '0 0 48%',
         height: '100%',
@@ -131,10 +138,12 @@ export const GamePage: React.FC<GamePageProps> = ({
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
+        // 19.2 유튜브 재생 영역: 오른쪽 끝에서 10~15% 여백 확보
         paddingRight: '6vw',
         paddingLeft: '2vw',
         boxSizing: 'border-box'
       }}>
+        {/* 우측 최상단 톱니바퀴 및 종료 버튼 */}
         <div style={{
           position: 'absolute',
           top: '20px',
@@ -185,10 +194,12 @@ export const GamePage: React.FC<GamePageProps> = ({
           </button>
         </div>
 
-        {/* 19.3 상단 정보 표시 영역: 중앙 정렬 세로 순서
-            1. [모드] : [음악 이름]
-            2. MAXIMUM COMBO : [숫자]
-            3. SUCCESSFUL RATING : [비율%]
+        {/* 19.3 상단 정보 표시 영역:
+            유튜브 재생 영역 위쪽에 모드, 음악 이름, 최대 콤보, 성공한 비율(달성률) 정보 칸
+            내부 항목들은 중앙 정렬하여 세로 순서로 배치:
+            1. [모드] : [음악 이름] (예: MASTER : World is mine)
+            2. MAXIMUM COMBO : [숫자] (예: MAXIMUM COMBO : 523)
+            3. SUCCESSFUL RATING : [비율%] (예: SUCCESSFUL RATING : 94.32%)
         */}
         <div className="glass-panel font-chakra" style={{
           width: '100%',
@@ -204,6 +215,7 @@ export const GamePage: React.FC<GamePageProps> = ({
           border: '1px solid rgba(56, 189, 248, 0.3)',
           boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)'
         }}>
+          {/* 1. [모드] : [음악 이름] */}
           <div style={{
             fontSize: '18px',
             fontWeight: '700',
@@ -217,6 +229,7 @@ export const GamePage: React.FC<GamePageProps> = ({
             {modeDisplayName} : {song.title}
           </div>
 
+          {/* 2. MAXIMUM COMBO : [숫자] */}
           <div style={{
             fontSize: '22px',
             fontWeight: '800',
@@ -227,6 +240,7 @@ export const GamePage: React.FC<GamePageProps> = ({
             MAXIMUM COMBO : {maxCombo}
           </div>
 
+          {/* 3. SUCCESSFUL RATING : [비율%] */}
           <div style={{
             fontSize: '20px',
             fontWeight: '700',
@@ -250,6 +264,7 @@ export const GamePage: React.FC<GamePageProps> = ({
           border: '2px solid rgba(255, 255, 255, 0.1)',
           position: 'relative'
         }}>
+          {/* YouTube IFrame 마운트 대상 DOM */}
           <div id={youtubeContainerId} style={{ width: '100%', height: '100%' }} />
 
           {!isEngineReady && (

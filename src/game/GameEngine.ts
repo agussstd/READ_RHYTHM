@@ -69,20 +69,24 @@ export class GameEngine {
 
   private setupNoteJudgementHandler(): void {
     this.noteManager.setJudgedCallback((note, result: JudgementResult) => {
+      // 1. 판정 카운트 기록
       this.judgements[result.type] += 1;
 
+      // 2. 콤보 처리
       const comboInfo = this.comboManager.processJudgement(result.type);
       if (this.renderer) {
         this.renderer.setCombo(comboInfo.combo);
         this.renderer.triggerHit(note.lane, result);
       }
 
+      // 3. 100.00% 만점 기준 달성률 가점 연산
       const currentAcc = this.accuracyManager.addJudgement(
         result.type,
         comboInfo.multiplier,
         note.type
       );
 
+      // 통계 콜백 전송
       if (this.callbacks.onUpdateStats) {
         this.callbacks.onUpdateStats({
           currentTime: this.timingManager.getCurrentGameTime(),
@@ -92,6 +96,7 @@ export class GameEngine {
         });
       }
 
+      // 모든 노트가 처리되었고 영상 끝부분인 경우 자동 종료 확인
       this.checkAllNotesProcessed();
     });
   }
@@ -102,6 +107,7 @@ export class GameEngine {
       const gameTime = this.timingManager.getCurrentGameTime();
       const result = this.noteManager.handleLaneKeyDown(lane, gameTime);
       if (!result && this.renderer) {
+        // 빈 곳 타격 이펙트
         this.renderer.triggerHit(lane);
       }
     });
@@ -123,17 +129,22 @@ export class GameEngine {
     this.currentChart = chart;
     this.callbacks = callbacks;
 
+    // 모듈 초기화
     this.judgements = { PERFECT: 0, GOOD: 0, FAST: 0, FAIL: 0 };
     this.comboManager.reset();
     this.accuracyManager.reset();
     this.accuracyManager.initializeChart(chart.notes);
     this.noteManager.loadChart(chart.notes);
 
+    // 유튜브 플레이어 초기화
     await this.timingManager.initPlayer(
       containerId,
       song.youtubeVideoId,
-      () => {},
       () => {
+        // Ready
+      },
+      () => {
+        // Ended
         this.finishGame();
       }
     );
@@ -155,8 +166,10 @@ export class GameEngine {
 
     const gameTime = this.timingManager.getCurrentGameTime();
 
+    // 1. 노트 상태 업데이트 (미스/홀드 검사)
     this.noteManager.update(gameTime, (lane) => this.inputManager.isLanePressed(lane));
 
+    // 2. 캔버스 렌더링
     if (this.renderer) {
       this.renderer.render(
         this.noteManager.getAllNotes(),
@@ -166,6 +179,7 @@ export class GameEngine {
       );
     }
 
+    // 3. 주기적 통계 갱신
     if (this.callbacks.onUpdateStats) {
       this.callbacks.onUpdateStats({
         currentTime: gameTime,
@@ -182,6 +196,7 @@ export class GameEngine {
     const total = this.accuracyManager.getTotalNotesCount();
     const processed = this.accuracyManager.getProcessedNotesCount();
     if (total > 0 && processed >= total) {
+      // 마지막 노트 처리 후 2초 뒤 자동 종료 (영상 감상 후 종료되도록 할 수도 있음)
       setTimeout(() => {
         if (this.isRunning) {
           this.finishGame();

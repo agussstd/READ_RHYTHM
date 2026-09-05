@@ -17,7 +17,7 @@ export const DifficultySelectPage: React.FC<DifficultySelectPageProps> = ({
   const [countdown, setCountdown] = useState<number | null>(null);
   const [chosenDifficulty, setChosenDifficulty] = useState<DifficultyLevel | null>(null);
 
-  // 18. 난이도를 선택하면 3초 카운트다운(3, 2, 1) 후 게임 플레이 시작
+  // 3초 카운트다운 (3 -> 2 -> 1 -> START)
   useEffect(() => {
     if (countdown === null) return;
 
@@ -27,13 +27,14 @@ export const DifficultySelectPage: React.FC<DifficultySelectPageProps> = ({
       }, 1000);
       return () => clearTimeout(timer);
     } else if (countdown === 0 && chosenDifficulty) {
+      // 카운트다운 종료 시 게임 시작 콜백
       onSelectDifficulty(chosenDifficulty);
     }
   }, [countdown, chosenDifficulty, onSelectDifficulty]);
 
   const handleDifficultyClick = (diff: DifficultyLevel) => {
     setChosenDifficulty(diff);
-    setCountdown(3);
+    setCountdown(3); // 3초 카운트다운 시작
   };
 
   return (
@@ -49,6 +50,7 @@ export const DifficultySelectPage: React.FC<DifficultySelectPageProps> = ({
       padding: '40px',
       overflow: 'hidden'
     }}>
+      {/* 3초 카운트다운 오버레이 */}
       {countdown !== null && countdown > 0 && (
         <div style={{
           position: 'fixed',
@@ -80,6 +82,7 @@ export const DifficultySelectPage: React.FC<DifficultySelectPageProps> = ({
         </div>
       )}
 
+      {/* 상단 뒤로가기 및 제목 */}
       <div style={{ position: 'absolute', top: '30px', left: '40px' }}>
         <button
           onClick={onBack}
@@ -99,6 +102,7 @@ export const DifficultySelectPage: React.FC<DifficultySelectPageProps> = ({
         </button>
       </div>
 
+      {/* 선택된 곡 카드 정보 */}
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
         <span style={{
           background: 'rgba(56, 189, 248, 0.2)',
@@ -119,7 +123,7 @@ export const DifficultySelectPage: React.FC<DifficultySelectPageProps> = ({
         </p>
       </div>
 
-      {/* 18. 난이도 버튼 색상: かんたん(초록), ふつう(주황), むずかしい(빨강), マスター(보라) */}
+      {/* 4가지 난이도 선택 버튼 그리드 (18. 명세 색상 적용) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',

@@ -59,7 +59,7 @@ export class InputManager {
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
-    if (e.repeat) return;
+    if (e.repeat) return; // 연속 입력 방지
 
     const lane = KEY_TO_LANE_MAP[e.code] ?? KEY_TO_LANE_MAP[e.key];
     if (lane !== undefined) {
