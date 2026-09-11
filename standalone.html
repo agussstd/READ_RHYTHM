@@ -371,6 +371,12 @@
               },
               onStateChange: (e) => {
                 if (e.data === 0) finish();
+              },
+              onError: (err) => {
+                console.error('YouTube Player Error:', err.data);
+                if (err.data === 150 || err.data === 153 || err.data === 101) {
+                  alert('해당 유튜브 영상은 저작권/게시자 설정으로 인해 외부 플레이어(임베드) 재생이 금지되어 있습니다 (오류 153/150). 다른 곡을 선택해 주세요.');
+                }
               }
             }
           });

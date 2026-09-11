@@ -97,8 +97,10 @@ export class YouTubeTimingManager {
           showinfo: 0,
           iv_load_policy: 3,
           enablejsapi: 1,
-          // Provide origin URL to satisfy YouTube allowed sites policy
-          origin: window.location.origin
+          // Provide origin URL to satisfy YouTube allowed sites policy (only for http/https)
+          ...(window.location.protocol.startsWith('http') && window.location.origin !== 'null'
+            ? { origin: window.location.origin }
+            : {})
         },
         events: {
           onReady: () => {
@@ -120,7 +122,10 @@ export class YouTubeTimingManager {
             }
           },
           onError: (err: any) => {
-            console.error('YouTube Player Error:', err);
+            console.error('YouTube Player Error:', err.data);
+            if (err.data === 150 || err.data === 153 || err.data === 101) {
+              alert('해당 유튜브 영상은 저작권/게시자 설정으로 인해 외부 플레이어(임베드) 재생이 금지되어 있습니다 (오류 153/150). 다른 곡을 선택하거나 다른 영상 ID로 교체해 주세요.');
+            }
           }
         }
       });
