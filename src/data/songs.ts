@@ -7,7 +7,7 @@ export const DEFAULT_SONGS: Song[] = [
     title: 'World is Mine',
     artist: 'ryo (supercell) feat. 初音ミク',
     category: 'VOCALOID',
-    youtubeVideoId: 'DTxlh8_5J7g', // World is Mine 공식/유명 MV
+    youtubeVideoId: 'QYsGXWTmjoA', // World is Mine 공식/유명 MV
     previewStartTime: 15,
     charts: {
       easy: '/charts/song-01/easy.json',
@@ -18,10 +18,10 @@ export const DEFAULT_SONGS: Song[] = [
   },
   {
     id: 'song-02',
-    title: 'Melt (メルト)',
+    title: 'メルト',
     artist: 'ryo (supercell) feat. 初音ミク',
     category: 'VOCALOID',
-    youtubeVideoId: 'o1jAMSQQ4-M', // Melt
+    youtubeVideoId: 'o1jAMSQyVPc', // Melt
     previewStartTime: 20,
     charts: {
       easy: '/charts/song-02/easy.json',
@@ -32,7 +32,7 @@ export const DEFAULT_SONGS: Song[] = [
   },
   {
     id: 'song-03',
-    title: 'アイドル (Idol)',
+    title: 'アイドル',
     artist: 'YOASOBI',
     category: 'J-POP',
     youtubeVideoId: 'ZRtdQ81jPUQ', // YOASOBI Idol Official MV
@@ -46,10 +46,10 @@ export const DEFAULT_SONGS: Song[] = [
   },
   {
     id: 'song-04',
-    title: 'Freedom Dive',
-    artist: 'xi',
+    title: 'MEGALOVANIA',
+    artist: 'Toby Fox',
     category: 'VARIETY',
-    youtubeVideoId: '6q_ZqM_jJ5A',
+    youtubeVideoId: '0FCvzsVlXpQ',
     previewStartTime: 12,
     charts: {
       easy: '/charts/song-04/easy.json',
