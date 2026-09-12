@@ -63,7 +63,7 @@ export const DifficultySelectPage: React.FC<DifficultySelectPageProps> = ({
           justifyContent: 'center',
           zIndex: 2000
         }}>
-          <div className="countdown-number font-chakra" style={{
+          <div key={countdown} className="countdown-number font-chakra" style={{
             fontSize: '160px',
             fontWeight: '900',
             color: chosenDifficulty ? DIFFICULTY_COLORS[chosenDifficulty] : '#38bdf8',
