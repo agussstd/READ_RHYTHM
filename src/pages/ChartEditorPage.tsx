@@ -17,6 +17,7 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
   const [beatSnap, setBeatSnap] = useState<BeatSnap>('1/8');
   const [notes, setNotes] = useState<NoteData[]>([]);
   const [selectedNoteType, setSelectedNoteType] = useState<NoteType>('tap');
+  const [customHoldDuration, setCustomHoldDuration] = useState<number>(0.8);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
@@ -68,7 +69,7 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentTime, bpm, beatSnap, selectedNoteType]);
+  }, [currentTime, bpm, beatSnap, selectedNoteType, customHoldDuration]);
 
   const snapDurationMap: Record<BeatSnap, number> = {
     '1/4': 1,
@@ -90,7 +91,7 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
       time: snapped,
       lane,
       type: selectedNoteType,
-      holdDuration: selectedNoteType === 'hold' ? 0.8 : undefined
+      holdDuration: selectedNoteType === 'hold' ? Math.max(0.2, customHoldDuration) : undefined
     };
 
     setNotes((prev) => [...prev.filter((n) => !(Math.abs(n.time - snapped) < 0.05 && n.lane === lane)), newNote].sort((a, b) => a.time - b.time));
@@ -138,15 +139,44 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
-        const parsed: ChartData = JSON.parse(evt.target?.result as string);
-        if (parsed.notes) {
-          setNotes(parsed.notes);
-          if (parsed.bpm) setBpm(parsed.bpm);
-          if (parsed.offset) setOffset(parsed.offset);
+        const raw = evt.target?.result as string;
+        const parsed: any = JSON.parse(raw);
+
+        // parsed가 배열 형태인 경우 ([{ time, lane, ... }, ...]) 또는 { notes: [...] } 형태인 경우 모두 지원
+        let importedNotes: NoteData[] = [];
+        if (Array.isArray(parsed)) {
+          importedNotes = parsed;
+        } else if (parsed && Array.isArray(parsed.notes)) {
+          importedNotes = parsed.notes;
+          if (parsed.bpm && typeof parsed.bpm === 'number') setBpm(parsed.bpm);
+          if (parsed.offset !== undefined && typeof parsed.offset === 'number') setOffset(parsed.offset);
           if (parsed.difficulty) setDifficulty(parsed.difficulty);
+          if (parsed.songId) {
+            const foundSong = DEFAULT_SONGS.find((s) => s.id === parsed.songId);
+            if (foundSong) setSelectedSong(foundSong);
+          }
+        } else {
+          alert('올바른 채보 JSON 파일이 아닙니다. (notes 배열을 찾을 수 없습니다)');
+          return;
         }
+
+        // 각 노트에 누락된 필드가 있다면 안전하게 보정
+        const validatedNotes: NoteData[] = importedNotes.map((n, idx) => ({
+          id: n.id || `imported-${Date.now()}-${idx}`,
+          time: typeof n.time === 'number' ? n.time : 0,
+          lane: (n.lane >= 0 && n.lane <= 3 ? n.lane : 0) as Lane,
+          type: (['tap', 'special', 'hold'].includes(n.type) ? n.type : 'tap') as NoteType,
+          holdDuration: n.type === 'hold' ? (n.holdDuration || 0.8) : undefined
+        })).sort((a, b) => a.time - b.time);
+
+        setNotes(validatedNotes);
+        alert(`채보를 성공적으로 불러왔습니다! (총 ${validatedNotes.length}개 노트)`);
       } catch (err) {
-        alert('올바른 채보 JSON 파일이 아닙니다.');
+        console.error('JSON 파싱 오류:', err);
+        alert('올바른 채보 JSON 파일이 아닙니다. JSON 형식을 확인해주세요.');
+      } finally {
+        // 동일한 파일을 연속으로 다시 선택해도 onChange 이벤트가 트리거되도록 value 초기화
+        e.target.value = '';
       }
     };
     reader.readAsText(file);
@@ -170,6 +200,32 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
             ← 나가기
           </button>
           <h2 className="font-chakra" style={{ fontSize: '20px', color: '#38bdf8' }}>CHART EDITOR</h2>
+          
+          {/* 대상 곡 선택 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px', color: '#94a3b8' }}>편집할 곡:</span>
+            <select
+              value={selectedSong.id}
+              onChange={(e) => {
+                const song = DEFAULT_SONGS.find((s) => s.id === e.target.value);
+                if (song) setSelectedSong(song);
+              }}
+              style={{
+                background: '#0f172a',
+                border: '1px solid #334155',
+                color: '#fff',
+                padding: '6px 10px',
+                borderRadius: '6px',
+                fontSize: '13px'
+              }}
+            >
+              {DEFAULT_SONGS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.title} ({s.artist})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -211,6 +267,29 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
               <span className="font-chakra" style={{ marginLeft: '16px', fontSize: '18px', color: '#38bdf8' }}>
                 {currentTime.toFixed(3)}s
               </span>
+            </div>
+
+            {/* 타임라인 탐색(Seek) 슬라이더 */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+                <span>재생 위치 탐색</span>
+                <span>{currentTime.toFixed(1)}s / {timingRef.current?.getDuration() ? timingRef.current.getDuration().toFixed(1) : 0}s</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={timingRef.current?.getDuration() || 300}
+                step={0.1}
+                value={currentTime}
+                onChange={(e) => {
+                  const targetSec = parseFloat(e.target.value);
+                  setCurrentTime(targetSec);
+                  if (timingRef.current) {
+                    timingRef.current.seekTo(targetSec);
+                  }
+                }}
+                style={{ width: '100%', accentColor: '#38bdf8', cursor: 'pointer' }}
+              />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px' }}>
@@ -261,6 +340,22 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
                   <option value="hold">홀드 (빨간색)</option>
                 </select>
               </div>
+              {selectedNoteType === 'hold' && (
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', color: '#94a3b8', marginBottom: '4px' }}>
+                    홀드 지속 시간 (초): {customHoldDuration.toFixed(2)}s
+                  </label>
+                  <input
+                    type="range"
+                    min={0.2}
+                    max={5.0}
+                    step={0.1}
+                    value={customHoldDuration}
+                    onChange={(e) => setCustomHoldDuration(parseFloat(e.target.value))}
+                    style={{ width: '100%', accentColor: '#38bdf8' }}
+                  />
+                </div>
+              )}
             </div>
 
             <div style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '6px', fontSize: '12px', color: '#94a3b8' }}>
@@ -297,7 +392,15 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
                   }}
                 >
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <span className="font-chakra" style={{ color: '#38bdf8', fontWeight: 'bold' }}>
+                    <span
+                      onClick={() => {
+                        setCurrentTime(note.time);
+                        if (timingRef.current) timingRef.current.seekTo(note.time);
+                      }}
+                      className="font-chakra"
+                      style={{ color: '#38bdf8', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}
+                      title="클릭하여 해당 위치로 이동"
+                    >
                       {note.time.toFixed(3)}s
                     </span>
                     <span style={{
@@ -312,6 +415,7 @@ export const ChartEditorPage: React.FC<ChartEditorPageProps> = ({ onBack }) => {
                       color: note.type === 'special' ? '#facc15' : '#f87171'
                     }}>
                       [{note.type.toUpperCase()}]
+                      {note.type === 'hold' && note.holdDuration && ` (${note.holdDuration.toFixed(2)}s)`}
                     </span>
                   </div>
                   <button
