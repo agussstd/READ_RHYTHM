@@ -180,15 +180,17 @@ export class CanvasRenderer {
         ctx.strokeStyle = this.COLOR_HOLD;
         ctx.lineWidth = 2;
 
-        const effectiveTopY = Math.min(holdTopY, judgmentY - (note.holdProgress || 0) * holdHeight);
         const currentHeadY = note.activeHold ? judgmentY : targetY;
+        const barHeight = Math.max(0, currentHeadY - holdTopY);
 
-        ctx.fillRect(laneX + 8, effectiveTopY, noteW - 16, Math.max(4, currentHeadY - effectiveTopY));
-        ctx.strokeRect(laneX + 8, effectiveTopY, noteW - 16, Math.max(4, currentHeadY - effectiveTopY));
+        if (barHeight > 0) {
+          ctx.fillRect(laneX + 8, holdTopY, noteW - 16, barHeight);
+          ctx.strokeRect(laneX + 8, holdTopY, noteW - 16, barHeight);
 
-        // 홀드 끝부분 마커
-        ctx.fillStyle = this.COLOR_HOLD;
-        ctx.fillRect(laneX, effectiveTopY - noteHeight / 2, noteW, noteHeight / 2);
+          // 홀드 끝부분 마커
+          ctx.fillStyle = this.COLOR_HOLD;
+          ctx.fillRect(laneX, holdTopY - noteHeight / 2, noteW, noteHeight / 2);
+        }
         ctx.restore();
       }
 

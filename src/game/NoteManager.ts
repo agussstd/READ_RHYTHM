@@ -51,29 +51,39 @@ export class NoteManager {
 
           const pressed = isLanePressed(l as Lane);
 
-          // 키를 도중에 뗀 경우
-          if (!pressed && currentTime < holdEndTime - 0.1) {
+          // 키를 누르고 있는 중이면 일시 뗌 타이머 초기화
+          if (pressed) {
+            note.lastReleaseTime = undefined;
+          } else {
+            // 키를 뗀 상태: 유예 시간(Grace Period, 180ms) 버퍼링
+            if (note.lastReleaseTime === undefined) {
+              note.lastReleaseTime = currentTime;
+            }
+          }
+
+          // 홀드가 끝까지 도달한 경우 (완벽 완주)
+          if (currentTime >= holdEndTime - 0.08) {
+            note.activeHold = false;
+            note.isProcessed = true;
+            note.holdProgress = 1.0;
+            // 이미 시작 시점에 판정 및 콤보 1이 적립되었으므로, 중복 콤보/판정 가산 없이 종료 상태 완료
+            continue;
+          }
+
+          // 키를 뗀 채로 유예 시간(0.18초) 이상 경과했고 아직 홀드 끝에 도달하지 못한 경우 -> FAIL 처리
+          if (
+            !pressed &&
+            note.lastReleaseTime !== undefined &&
+            currentTime - note.lastReleaseTime > 0.18 &&
+            currentTime < holdEndTime - 0.08
+          ) {
             note.activeHold = false;
             note.isProcessed = true;
             if (this.onNoteJudged) {
               this.onNoteJudged(note, {
                 type: 'FAIL',
-                diffMs: 250,
+                diffMs: (holdEndTime - currentTime) * 1000,
                 rate: 0.0
-              });
-            }
-            continue;
-          }
-
-          // 홀드가 끝까지 도달한 경우
-          if (currentTime >= holdEndTime) {
-            note.activeHold = false;
-            note.isProcessed = true;
-            if (this.onNoteJudged) {
-              this.onNoteJudged(note, {
-                type: 'PERFECT',
-                diffMs: 0,
-                rate: 1.0
               });
             }
             continue;
@@ -113,6 +123,11 @@ export class NoteManager {
         if (note.type === 'hold') {
           if (result.type !== 'FAIL') {
             note.activeHold = true;
+            note.lastReleaseTime = undefined;
+            // 홀드 노트 누른 즉시 판정 콜백을 호출하여 COMBO 1 적립 및 타격 이펙트 발동!
+            if (this.onNoteJudged) {
+              this.onNoteJudged(note, result);
+            }
             return result;
           } else {
             note.isProcessed = true;
@@ -146,27 +161,16 @@ export class NoteManager {
     for (const note of laneQueue) {
       if (!note.isProcessed && note.activeHold && note.type === 'hold') {
         const holdEndTime = note.time + (note.holdDuration || 0);
-        if (currentTime < holdEndTime - 0.08) {
-          // 너무 일찍 뗀 경우 FAIL
+
+        // 홀드 끝부분(끝나기 80ms 전)까지 유지한 후 뗀 경우 정상 완료
+        if (currentTime >= holdEndTime - 0.08) {
           note.activeHold = false;
           note.isProcessed = true;
-          if (this.onNoteJudged) {
-            this.onNoteJudged(note, {
-              type: 'FAIL',
-              diffMs: (holdEndTime - currentTime) * 1000,
-              rate: 0.0
-            });
-          }
+          note.holdProgress = 1.0;
         } else {
-          // 적절히 끝까지 유지한 후 뗀 경우 PERFECT 완료
-          note.activeHold = false;
-          note.isProcessed = true;
-          if (this.onNoteJudged) {
-            this.onNoteJudged(note, {
-              type: 'PERFECT',
-              diffMs: 0,
-              rate: 1.0
-            });
+          // 키를 뗐으므로 일시 해제 시간 기록 (update 루프에서 유예 시간 후 FAIL 판단)
+          if (note.lastReleaseTime === undefined) {
+            note.lastReleaseTime = currentTime;
           }
         }
         break;

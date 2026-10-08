@@ -84,4 +84,5 @@ export interface ActiveNoteState extends NoteData {
   activeHold?: boolean;
   holdProgress?: number; // 0 ~ 1
   holdEndJudged?: boolean;
+  lastReleaseTime?: number; // 키를 일시적으로 뗀 시간 (유예 시간 버퍼링용)
 }
