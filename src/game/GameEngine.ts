@@ -39,6 +39,8 @@ export class GameEngine {
     FAST: 0,
     FAIL: 0
   };
+  private allNotesFinished: boolean = false;
+  private videoEnded: boolean = false;
 
   constructor(settings: GameSettings) {
     this.settings = settings;
@@ -131,6 +133,8 @@ export class GameEngine {
 
     // 모듈 초기화
     this.judgements = { PERFECT: 0, GOOD: 0, FAST: 0, FAIL: 0 };
+    this.allNotesFinished = false;
+    this.videoEnded = false;
     this.comboManager.reset();
     this.accuracyManager.reset();
     this.accuracyManager.initializeChart(chart.notes);
@@ -144,8 +148,9 @@ export class GameEngine {
         // Ready
       },
       () => {
-        // Ended
-        this.finishGame();
+        // Ended (유튜브 영상 재생 완료 이벤트)
+        this.videoEnded = true;
+        this.checkGameCompletion();
       }
     );
 
@@ -189,6 +194,9 @@ export class GameEngine {
       });
     }
 
+    // 4. 모든 노트가 소진되었고 영상 재생이 끝에 도달했는지 확인
+    this.checkGameCompletion();
+
     this.animFrameId = requestAnimationFrame(this.loop);
   }
 
@@ -196,12 +204,24 @@ export class GameEngine {
     const total = this.accuracyManager.getTotalNotesCount();
     const processed = this.accuracyManager.getProcessedNotesCount();
     if (total > 0 && processed >= total) {
-      // 마지막 노트 처리 후 2초 뒤 자동 종료 (영상 감상 후 종료되도록 할 수도 있음)
-      setTimeout(() => {
-        if (this.isRunning) {
-          this.finishGame();
-        }
-      }, 2500);
+      this.allNotesFinished = true;
+      this.checkGameCompletion();
+    }
+  }
+
+  /**
+   * 노트와 영상이 '둘 다' 모두 끝났을 때 게임을 종료
+   */
+  private checkGameCompletion(): void {
+    if (!this.isRunning) return;
+
+    const gameTime = this.timingManager.getCurrentGameTime();
+    const duration = this.timingManager.getDuration();
+    const isVideoDone = this.videoEnded || (duration > 0 && gameTime >= duration - 0.5);
+
+    // 노트가 모두 소진되었고, 영상도 완전히 끝났을 때만 게임 종료
+    if (this.allNotesFinished && isVideoDone) {
+      this.finishGame();
     }
   }
 
